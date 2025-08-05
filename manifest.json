@@ -1,12 +1,10 @@
 {
+  "name": "sillytavern-game-toolbox",
   "display_name": "Game Toolbox",
-  "loading_order": 100,
-  "requires": [],
-  "optional": [],
-  "js": "index.js",
-  "css": "style.css",
-  "author": "Game Toolbox Developer",
+  "author": "Your Name",
+  "description": "An extension that adds a toolbox of classic games like Minesweeper and Sudoku, embeddable directly in the UI.",
   "version": "1.0.0",
-  "homePage": "https://github.com/yourusername/st-game-toolbox",
-  "auto_update": true
+  "icon": "icon.svg",
+  "js": ["script.js"],
+  "css": ["style.css"]
 }
