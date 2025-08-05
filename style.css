@@ -1,5 +1,5 @@
-/* Floating Action Button */
-#game-toolbox-floating-button {
+/* Draggable Handle / Trigger Button */
+#gt-handle {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -13,17 +13,24 @@
     justify-content: center;
     font-size: 28px;
     color: white;
-    cursor: move;
-    z-index: 1000;
+    cursor: grab;
+    z-index: 9999;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     user-select: none;
     transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-#game-toolbox-floating-button:hover {
+#gt-handle:hover {
     transform: scale(1.1);
     background-color: #4a4a5a;
 }
+
+#gt-handle.dragging {
+    cursor: grabbing;
+    transform: scale(1.15);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
 
 /* Main Panel */
 #game-toolbox-panel {
@@ -39,14 +46,10 @@
     border: 1px solid #444;
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    z-index: 1001;
+    z-index: 10000;
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
-}
-
-#game-toolbox-panel.hidden {
-    display: none;
 }
 
 #game-toolbox-panel.minimized {
@@ -184,7 +187,7 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1002;
+    z-index: 10001;
     display: flex;
     align-items: center;
     justify-content: center;
