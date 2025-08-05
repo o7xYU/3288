@@ -1,584 +1,246 @@
-/* Game Toolbox Styles */
-
-/* Floating Game Button */
-.game-toolbox-floating-button {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    background: var(--SmartThemeBlurTintColor);
-    border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 50%;
+/* Extension Menu Button */
+#game-toolbox-button {
     cursor: pointer;
+    font-size: 20px;
+    padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    z-index: 9999;
-    backdrop-filter: blur(10px);
 }
 
-.game-toolbox-floating-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    background: var(--SmartThemeBorderColor);
+#game-toolbox-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
 }
 
-.game-toolbox-floating-button:active {
-    transform: scale(0.95);
-}
-
-/* Panel styles */
-.game-toolbox-panel {
+/* Main Panel */
+#game-toolbox-panel {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: var(--SmartThemeBodyColor);
-    border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    z-index: 10000;
-    width: 600px;
-    max-width: 90vw;
-    max-height: 80vh;
-    display: none;
-    backdrop-filter: blur(20px);
-    animation: panelFadeIn 0.3s ease-out;
+    width: 80vw;
+    max-width: 800px;
+    height: 70vh;
+    max-height: 600px;
+    background-color: #2e2e3e;
+    border: 1px solid #444;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
 }
 
-@keyframes panelFadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
+#game-toolbox-panel.minimized {
+    transform: translate(-50%, 0) scale(0.1);
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
 }
 
-.game-toolbox-panel.show {
-    display: block;
-}
-
-.game-toolbox-panel.minimized {
-    width: 250px;
-    height: 50px;
-    top: auto;
-    bottom: 100px;
-    right: 30px;
-    left: auto;
-    transform: none;
-    border-radius: 25px;
-    animation: panelMinimize 0.3s ease-out;
-}
-
-@keyframes panelMinimize {
-    from {
-        width: 600px;
-        height: auto;
-        top: 50%;
-        right: auto;
-        bottom: auto;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    to {
-        width: 250px;
-        height: 50px;
-        top: auto;
-        right: 30px;
-        bottom: 100px;
-        left: auto;
-        transform: none;
-    }
-}
-
-.game-toolbox-header {
+/* Panel Header */
+.gt-panel-header {
+    background-color: #3a3a4a;
+    color: white;
+    padding: 10px 15px;
+    cursor: move;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    background: var(--SmartThemeBlurTintColor);
-    border-bottom: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 13px 13px 0 0;
-    backdrop-filter: blur(10px);
+    user-select: none;
 }
 
-.game-toolbox-panel.minimized .game-toolbox-header {
-    border-radius: 23px;
-    border-bottom: none;
-    padding: 10px 15px;
-}
-
-.game-toolbox-title {
-    font-size: 18px;
+.gt-panel-title {
     font-weight: bold;
-    color: var(--SmartThemeBodyTextColor);
 }
 
-.game-toolbox-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.game-toolbox-control-btn {
+.gt-panel-controls button {
     background: none;
     border: none;
-    color: var(--SmartThemeBodyTextColor);
-    cursor: pointer;
+    color: white;
     font-size: 18px;
-    padding: 8px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    cursor: pointer;
+    margin-left: 10px;
 }
 
-.game-toolbox-control-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
+.gt-panel-controls button:hover {
+    color: #aaa;
 }
 
-.game-toolbox-content {
-    padding: 25px;
+/* Panel Content */
+.gt-panel-content {
+    flex-grow: 1;
+    padding: 20px;
     overflow-y: auto;
-    max-height: calc(80vh - 80px);
+    display: flex;
+    flex-direction: column;
 }
 
-.game-toolbox-panel.minimized .game-toolbox-content {
-    display: none;
-}
-
-.game-grid {
+/* Game Grid */
+.gt-game-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 20px;
+    justify-items: center;
 }
 
-.game-item {
+.gt-game-icon {
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 15px;
-    border-radius: 12px;
+    text-align: center;
+    color: #ddd;
+    transition: transform 0.2s ease;
 }
 
-.game-item:hover {
-    transform: translateY(-5px);
-    background: var(--SmartThemeBlurTintColor);
+.gt-game-icon:hover {
+    transform: scale(1.1);
+    color: white;
 }
 
-.game-icon {
+.gt-game-icon.icon-bg {
     width: 80px;
     height: 80px;
-    background: var(--SmartThemeBlurTintColor);
-    border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 20px;
+    background-color: #444;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 40px;
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
+    margin-bottom: 8px;
 }
 
-.game-item:hover .game-icon {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.game-name {
+.gt-game-icon.icon-label {
     font-size: 14px;
-    text-align: center;
-    font-weight: 500;
-    color: var(--SmartThemeBodyTextColor);
 }
 
-.add-game-btn {
-    border: 2px dashed var(--SmartThemeBorderColor);
-    background: transparent;
+/* Game View */
+.gt-game-view {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.add-game-btn .game-icon {
-    border-style: dashed;
-    background: transparent;
-}
-
-/* Game Container */
-.game-container {
-    display: none;
-    height: 500px;
-    overflow: hidden;
-}
-
-.game-container.show {
-    display: block;
-}
-
-.game-iframe {
+.gt-game-view iframe {
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 10px;
+    background-color: #fff; /* Default background for games */
 }
 
-.back-to-menu {
-    margin-bottom: 20px;
-    padding: 10px 20px;
-    background: var(--SmartThemeBlurTintColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-weight: 500;
-}
-
-.back-to-menu:hover {
-    background: var(--SmartThemeBorderColor);
-    transform: translateX(-5px);
-}
-
-/* Built-in Games Styles */
-.builtin-game {
-    width: 100%;
-    height: 450px;
+.gt-game-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+.gt-game-header h3 {
+    margin: 0;
+    color: white;
+}
+
+.gt-game-header button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.gt-game-header button:hover {
+    background-color: #45a049;
+}
+
+/* Add Game Modal */
+.gt-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gt-modal-content {
+    background-color: #2e2e3e;
     padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.gt-modal-content h3 {
+    margin-top: 0;
+    color: white;
+}
+
+.gt-modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #3a3a4a;
+    color: white;
     box-sizing: border-box;
 }
 
-/* Minesweeper Styles */
-.minesweeper-controls {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    align-items: center;
+.gt-modal-buttons {
+    text-align: right;
 }
 
-.minesweeper-controls button {
-    padding: 8px 16px;
-    background: var(--SmartThemeBlurTintColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.minesweeper-controls button:hover {
-    background: var(--SmartThemeBorderColor);
-}
-
-.minesweeper-grid {
-    display: grid;
-    gap: 2px;
-    background: var(--SmartThemeBorderColor);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.mine-cell {
-    width: 30px;
-    height: 30px;
-    background: var(--SmartThemeBlurTintColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 14px;
-    user-select: none;
-    transition: all 0.2s ease;
-}
-
-.mine-cell:hover:not(.revealed):not(.flagged) {
-    background: var(--SmartThemeBorderColor);
-    transform: scale(1.1);
-}
-
-.mine-cell.revealed {
-    background: var(--SmartThemeBodyColor);
-    cursor: default;
-}
-
-.mine-cell.mine {
-    background: #ff4444;
-    color: white;
-}
-
-.mine-cell.flagged {
-    background: #ffaa00;
-}
-
-.mine-cell.number-1 { color: #0000ff; }
-.mine-cell.number-2 { color: #008000; }
-.mine-cell.number-3 { color: #ff0000; }
-.mine-cell.number-4 { color: #000080; }
-.mine-cell.number-5 { color: #800000; }
-.mine-cell.number-6 { color: #008080; }
-.mine-cell.number-7 { color: #000000; }
-.mine-cell.number-8 { color: #808080; }
-
-/* Sudoku Styles */
-.sudoku-controls {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    align-items: center;
-}
-
-.sudoku-controls button {
-    padding: 8px 16px;
-    background: var(--SmartThemeBlurTintColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.sudoku-controls button:hover {
-    background: var(--SmartThemeBorderColor);
-}
-
-.sudoku-grid {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 1px;
-    background: var(--SmartThemeBorderColor);
-    padding: 3px;
-    border: 3px solid var(--SmartThemeBorderColor);
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.sudoku-cell {
-    width: 40px;
-    height: 40px;
-    background: var(--SmartThemeBodyColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    position: relative;
-    transition: all 0.2s ease;
-}
-
-.sudoku-cell:hover {
-    background: var(--SmartThemeBlurTintColor);
-}
-
-.sudoku-cell:nth-child(3n):not(:nth-child(9n)) {
-    border-right: 2px solid var(--SmartThemeBorderColor);
-}
-
-.sudoku-cell:nth-child(n+19):nth-child(-n+27),
-.sudoku-cell:nth-child(n+46):nth-child(-n+54) {
-    border-bottom: 2px solid var(--SmartThemeBorderColor);
-}
-
-.sudoku-cell.fixed {
-    background: var(--SmartThemeBlurTintColor);
-    color: var(--SmartThemeBodyTextColor);
-}
-
-.sudoku-cell.selected {
-    background: rgba(0, 123, 255, 0.3);
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-}
-
-.sudoku-cell.error {
-    color: #ff0000;
-    background: rgba(255, 0, 0, 0.1);
-}
-
-.sudoku-cell input {
-    width: 100%;
-    height: 100%;
+.gt-modal-buttons button {
+    padding: 8px 15px;
+    border-radius: 5px;
     border: none;
-    background: transparent;
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    outline: none;
-}
-
-.number-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 20px;
-}
-
-.number-btn {
-    width: 45px;
-    height: 45px;
-    border: 1px solid var(--SmartThemeBorderColor);
-    background: var(--SmartThemeBlurTintColor);
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    margin-left: 10px;
 }
 
-.number-btn:hover {
-    background: var(--SmartThemeBorderColor);
-    transform: scale(1.1);
-}
-
-/* Custom Game Dialog */
-.custom-game-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--SmartThemeBodyColor);
-    border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 15px;
-    padding: 25px;
-    z-index: 10001;
-    width: 450px;
-    display: none;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(20px);
-}
-
-.custom-game-dialog.show {
-    display: block;
-    animation: dialogFadeIn 0.3s ease-out;
-}
-
-@keyframes dialogFadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-.dialog-header {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: var(--SmartThemeBodyTextColor);
-}
-
-.dialog-content {
-    margin-bottom: 25px;
-}
-
-.dialog-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 8px;
-    background: var(--SmartThemeBodyColor);
-    color: var(--SmartThemeBodyTextColor);
-    margin-bottom: 15px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.dialog-input:focus {
-    border-color: var(--SmartThemeQuoteColor);
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
-    outline: none;
-}
-
-.dialog-buttons {
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-}
-
-.dialog-btn {
-    padding: 10px 20px;
-    border: 1px solid var(--SmartThemeBorderColor);
-    background: var(--SmartThemeBlurTintColor);
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.dialog-btn:hover {
-    background: var(--SmartThemeBorderColor);
-    transform: translateY(-2px);
-}
-
-.dialog-btn.primary {
-    background: var(--SmartThemeQuoteColor);
+.gt-modal-save-btn {
+    background-color: #4CAF50;
     color: white;
-    border-color: var(--SmartThemeQuoteColor);
 }
 
-.dialog-btn.primary:hover {
-    background: var(--SmartThemeBorderColor);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.gt-modal-cancel-btn {
+    background-color: #666;
+    color: white;
 }
 
-/* Dark mode optimizations */
-@media (prefers-color-scheme: dark) {
-    .game-toolbox-floating-button {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    }
-    
-    .game-toolbox-panel {
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-    }
-    
-    .custom-game-dialog {
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-    }
+.gt-custom-games-list {
+    margin-top: 20px;
+    color: #ccc;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .game-toolbox-floating-button {
-        bottom: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-    
-    .game-toolbox-panel {
-        width: 95vw;
-        max-height: 90vh;
-    }
-    
-    .game-toolbox-panel.minimized {
-        right: 20px;
-        bottom: 80px;
-        width: 200px;
-        height: 45px;
-    }
-    
-    .game-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 15px;
-    }
-    
-    .custom-game-dialog {
-        width: 90vw;
-        max-width: 400px;
-    }
+.gt-custom-games-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.gt-custom-games-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #444;
+}
+
+.gt-custom-games-list button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
 }
