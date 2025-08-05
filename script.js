@@ -5,22 +5,18 @@ import { sudokuGameHtml } from './sudoku.js';
     // Define constants for the extension
     const extensionName = "sillytavern-game-toolbox";
     const L_STORAGE_KEY_PANEL_STATE = "game-toolbox-panel-state";
-    const L_STORAGE_KEY_BUTTON_POS = "game-toolbox-button-pos";
+    const L_STORAGE_KEY_HANDLE_POS = "game-toolbox-handle-pos";
     const L_STORAGE_KEY_CUSTOM_GAMES = "game-toolbox-custom-games";
 
-    // Main state objects
+    // DOM elements
+    let handle;
     let panel;
-    let floatingButton;
-    let panelState = {
-        isOpen: false,
-        isMinimized: false,
-        top: '50%',
-        left: '50%',
-        width: '800px',
-        height: '600px'
-    };
-    let buttonPos = { top: null, left: null, bottom: '20px', right: '20px' };
+
+    // State objects
+    let panelState = {};
+    let handlePos = {};
     let customGames =;
+    let isDragging = false;
 
     // Built-in games configuration
     const builtInGames =;
@@ -46,90 +42,140 @@ import { sudokuGameHtml } from './sudoku.js';
         }
     }
 
-    // --- UI CREATION AND MANAGEMENT ---
+    // --- UI CONTROLLER ---
+    const ui = {
+        createHandle: async () => {
+            handlePos = await loadData(L_STORAGE_KEY_HANDLE_POS, { bottom: '20px', right: '20px' });
+            
+            handle = document.createElement('div');
+            handle.id = 'gt-handle';
+            handle.innerHTML = '🎮';
+            handle.title = 'Game Toolbox';
+            
+            Object.assign(handle.style, handlePos);
 
-    // Function to create and show the main panel
-    function showPanel() {
-        if (panel) {
-            panel.classList.remove('hidden');
-            panelState.isOpen = true;
-            return;
-        }
+            handle.addEventListener('mousedown', (e) => {
+                isDragging = false; // Reset drag state
+                const dragTimeout = setTimeout(() => {
+                    isDragging = true;
+                }, 150); // Set a small delay to differentiate click from drag
 
-        panel = document.createElement('div');
-        panel.id = 'game-toolbox-panel';
-        panel.innerHTML = `
-            <div class="gt-panel-header">
-                <span class="gt-panel-title">Game Toolbox</span>
-                <div class="gt-panel-controls">
-                    <button id="gt-minimize-btn">–</button>
-                    <button id="gt-close-btn">×</button>
+                let pos1 = 0, pos2 = 0, pos3 = e.clientX, pos4 = e.clientY;
+                handle.classList.add('dragging');
+
+                function elementDrag(ev) {
+                    ev.preventDefault();
+                    isDragging = true; // If moving, it's definitely a drag
+                    pos1 = pos3 - ev.clientX;
+                    pos2 = pos4 - ev.clientY;
+                    pos3 = ev.clientX;
+                    pos4 = ev.clientY;
+                    
+                    handle.style.bottom = 'auto';
+                    handle.style.right = 'auto';
+                    handle.style.top = `${handle.offsetTop - pos2}px`;
+                    handle.style.left = `${handle.offsetLeft - pos1}px`;
+                }
+
+                function closeDragElement() {
+                    clearTimeout(dragTimeout);
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                    handle.classList.remove('dragging');
+                    
+                    if (isDragging) {
+                        handlePos = { top: handle.style.top, left: handle.style.left, bottom: null, right: null };
+                        saveData(L_STORAGE_KEY_HANDLE_POS, handlePos);
+                    }
+                }
+
+                document.onmousemove = elementDrag;
+                document.onmouseup = closeDragElement;
+            });
+
+            handle.addEventListener('click', () => {
+                if (!isDragging) {
+                    ui.togglePanel();
+                }
+            });
+
+            document.body.appendChild(handle);
+        },
+
+        togglePanel: () => {
+            if (panel && document.body.contains(panel)) {
+                ui.destroyPanel();
+            } else {
+                ui.createPanel();
+            }
+        },
+
+        createPanel: async () => {
+            panelState = await loadData(L_STORAGE_KEY_PANEL_STATE, { top: '50%', left: '50%', isMinimized: false });
+
+            panel = document.createElement('div');
+            panel.id = 'game-toolbox-panel';
+            panel.innerHTML = `
+                <div class="gt-panel-header">
+                    <span class="gt-panel-title">Game Toolbox</span>
+                    <div class="gt-panel-controls">
+                        <button id="gt-minimize-btn">–</button>
+                        <button id="gt-close-btn">×</button>
+                    </div>
                 </div>
-            </div>
-            <div class="gt-panel-content" id="gt-panel-content"></div>
-        `;
-        document.body.appendChild(panel);
-        panelState.isOpen = true;
+                <div class="gt-panel-content" id="gt-panel-content"></div>
+            `;
+            document.body.appendChild(panel);
 
-        // Apply saved state
-        Object.assign(panel.style, { top: panelState.top, left: panelState.left, width: panelState.width, height: panelState.height });
-        if (panelState.isMinimized) panel.classList.add('minimized');
+            Object.assign(panel.style, { top: panelState.top, left: panelState.left });
+            if (panelState.isMinimized) panel.classList.add('minimized');
 
-        // Add event listeners
-        document.getElementById('gt-close-btn').addEventListener('click', hidePanel);
-        document.getElementById('gt-minimize-btn').addEventListener('click', toggleMinimize);
-        makeDraggable(panel, panel.querySelector('.gt-panel-header'), (el) => {
-            panelState.top = el.style.top;
-            panelState.left = el.style.left;
+            document.getElementById('gt-close-btn').addEventListener('click', ui.destroyPanel);
+            document.getElementById('gt-minimize-btn').addEventListener('click', ui.toggleMinimize);
+            
+            makeDraggable(panel, panel.querySelector('.gt-panel-header'), (el) => {
+                panelState.top = el.style.top;
+                panelState.left = el.style.left;
+                saveData(L_STORAGE_KEY_PANEL_STATE, panelState);
+            });
+
+            renderGameGrid();
+        },
+
+        destroyPanel: () => {
+            if (panel) {
+                panel.remove();
+                panel = null;
+            }
+        },
+
+        toggleMinimize: () => {
+            if (!panel) return;
+            panelState.isMinimized =!panelState.isMinimized;
+            panel.classList.toggle('minimized', panelState.isMinimized);
             saveData(L_STORAGE_KEY_PANEL_STATE, panelState);
-        });
-
-        renderGameGrid();
-    }
-
-    function hidePanel() {
-        if (panel) {
-            panel.classList.add('hidden');
-            panelState.isOpen = false;
         }
-    }
+    };
 
-    function toggleMinimize() {
-        if (!panel) return;
-        panelState.isMinimized =!panelState.isMinimized;
-        panel.classList.toggle('minimized', panelState.isMinimized);
-        saveData(L_STORAGE_KEY_PANEL_STATE, panelState);
-    }
-
-    function togglePanel() {
-        if (panel && panelState.isOpen) {
-            hidePanel();
-        } else {
-            showPanel();
-        }
-    }
-
-    // Function to render the main game selection grid
+    // --- GAME & MODAL RENDERING ---
     function renderGameGrid() {
         const content = document.getElementById('gt-panel-content');
+        if (!content) return;
         content.innerHTML = '<div class="gt-game-grid" id="gt-game-grid"></div>';
         const grid = document.getElementById('gt-game-grid');
 
-        // Render built-in games
         builtInGames.forEach(game => {
             const iconEl = createGameIcon(game.name, game.icon);
             iconEl.addEventListener('click', () => renderGameView(game));
             grid.appendChild(iconEl);
         });
 
-        // Render custom games
         customGames.forEach((game) => {
             const iconEl = createGameIcon(game.name, '🌐');
             iconEl.addEventListener('click', () => renderGameView(game, true));
             grid.appendChild(iconEl);
         });
 
-        // Render 'Add' button
         const addIconEl = createGameIcon('Add Game', '+');
         addIconEl.addEventListener('click', showAddGameModal);
         grid.appendChild(addIconEl);
@@ -142,9 +188,9 @@ import { sudokuGameHtml } from './sudoku.js';
         return iconEl;
     }
 
-    // Function to render the view for a selected game
     function renderGameView(game, isCustom = false) {
         const content = document.getElementById('gt-panel-content');
+        if (!content) return;
         content.innerHTML = `
             <div class="gt-game-view">
                 <div class="gt-game-header">
@@ -173,7 +219,6 @@ import { sudokuGameHtml } from './sudoku.js';
         }
     }
     
-    // Function to show the modal for adding/managing custom games
     function showAddGameModal() {
         const modalBackdrop = document.createElement('div');
         modalBackdrop.className = 'gt-modal-backdrop';
@@ -204,11 +249,11 @@ import { sudokuGameHtml } from './sudoku.js';
             const url = urlInput.value.trim();
             if (name && url) {
                 try {
-                    new URL(url); // Validate URL format
+                    new URL(url);
                     customGames.push({ name, url });
                     saveData(L_STORAGE_KEY_CUSTOM_GAMES, customGames).then(() => {
                         renderCustomGamesList(listElement);
-                        renderGameGrid(); // Update main grid
+                        renderGameGrid();
                     });
                     nameInput.value = '';
                     urlInput.value = '';
@@ -235,7 +280,7 @@ import { sudokuGameHtml } from './sudoku.js';
                 customGames.splice(index, 1);
                 saveData(L_STORAGE_KEY_CUSTOM_GAMES, customGames).then(() => {
                     renderCustomGamesList(ulElement);
-                    renderGameGrid(); // Update main grid
+                    renderGameGrid();
                 });
             });
             ulElement.appendChild(li);
@@ -243,70 +288,37 @@ import { sudokuGameHtml } from './sudoku.js';
     }
 
     // --- UTILITY FUNCTIONS ---
-
     function makeDraggable(element, handle, onDragEnd) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        handle.onmousedown = dragMouseDown;
-
-        function dragMouseDown(e) {
+        handle.onmousedown = (e) => {
             e.preventDefault();
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            document.onmouseup = closeDragElement;
+            let pos1 = 0, pos2 = 0, pos3 = e.clientX, pos4 = e.clientY;
+
+            function elementDrag(ev) {
+                ev.preventDefault();
+                pos1 = pos3 - ev.clientX;
+                pos2 = pos4 - ev.clientY;
+                pos3 = ev.clientX;
+                pos4 = ev.clientY;
+                element.style.top = `${element.offsetTop - pos2}px`;
+                element.style.left = `${element.offsetLeft - pos1}px`;
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                if (onDragEnd) onDragEnd(element);
+            }
+
             document.onmousemove = elementDrag;
-        }
-
-        function elementDrag(e) {
-            e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            element.style.bottom = 'auto'; // Remove conflicting properties
-            element.style.right = 'auto';
-            element.style.top = (element.offsetTop - pos2) + "px";
-            element.style.left = (element.offsetLeft - pos1) + "px";
-        }
-
-        function closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
-            if (onDragEnd) onDragEnd(element);
-        }
+            document.onmouseup = closeDragElement;
+        };
     }
 
     // --- INITIALIZATION ---
-
     async function init() {
-        // Load persistent data
-        panelState = await loadData(L_STORAGE_KEY_PANEL_STATE, panelState);
-        buttonPos = await loadData(L_STORAGE_KEY_BUTTON_POS, buttonPos);
         customGames = await loadData(L_STORAGE_KEY_CUSTOM_GAMES,);
-
-        // Create the floating action button
-        floatingButton = document.createElement('div');
-        floatingButton.id = 'game-toolbox-floating-button';
-        floatingButton.innerHTML = '🎮';
-        floatingButton.title = 'Game Toolbox';
-        
-        // Apply saved position
-        Object.assign(floatingButton.style, {
-            top: buttonPos.top,
-            left: buttonPos.left,
-            bottom: buttonPos.bottom,
-            right: buttonPos.right
-        });
-
-        floatingButton.addEventListener('click', togglePanel);
-        document.body.appendChild(floatingButton);
-
-        // Make it draggable and save its position on drag end
-        makeDraggable(floatingButton, floatingButton, (el) => {
-            buttonPos = { top: el.style.top, left: el.style.left, bottom: null, right: null };
-            saveData(L_STORAGE_KEY_BUTTON_POS, buttonPos);
-        });
+        ui.createHandle();
     }
 
-    // Wait for SillyTavern to be ready, then initialize
     document.addEventListener('APP_READY', init, { once: true });
 })();
