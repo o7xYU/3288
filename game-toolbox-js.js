@@ -9,15 +9,16 @@
     const defaultSettings = {
         customGames: [],
         minimized: false,
-        currentGame: null
+        currentGame: null,
+        floatingButtonPosition: { bottom: 30, right: 30 }
     };
     
     // Initialize the extension
     function init() {
         console.log(DEBUG_PREFIX, 'Initializing Game Toolbox');
         
-        // Add game button to extension menu
-        addGameButton();
+        // Create floating button
+        createFloatingButton();
         
         // Create main panel
         createGamePanel();
@@ -44,27 +45,88 @@
         context.saveSettingsDebounced();
     }
     
-    // Add game button to extension menu
-    function addGameButton() {
-        const extensionMenu = document.getElementById('extensionsMenu');
-        if (!extensionMenu) {
-            console.error(DEBUG_PREFIX, 'Extensions menu not found');
-            return;
+    // Create floating button
+    function createFloatingButton() {
+        // Remove existing button if any
+        const existingButton = document.getElementById('game-toolbox-floating-button');
+        if (existingButton) {
+            existingButton.remove();
         }
         
-        const gameButton = document.createElement('div');
-        gameButton.id = 'game-toolbox-button';
-        gameButton.className = 'extension_button game-toolbox-button';
-        gameButton.innerHTML = '🎮';
-        gameButton.title = 'Game Toolbox';
+        const floatingButton = document.createElement('div');
+        floatingButton.id = 'game-toolbox-floating-button';
+        floatingButton.className = 'game-toolbox-floating-button';
+        floatingButton.innerHTML = '🎮';
+        floatingButton.title = 'Game Toolbox';
         
-        gameButton.addEventListener('click', toggleGamePanel);
+        // Position the button
+        const settings = getSettings();
+        floatingButton.style.bottom = settings.floatingButtonPosition.bottom + 'px';
+        floatingButton.style.right = settings.floatingButtonPosition.right + 'px';
         
-        extensionMenu.appendChild(gameButton);
+        floatingButton.addEventListener('click', toggleGamePanel);
+        
+        // Make button draggable
+        makeDraggable(floatingButton);
+        
+        document.body.appendChild(floatingButton);
+    }
+    
+    // Make element draggable
+    function makeDraggable(element) {
+        let isDragging = false;
+        let startX, startY, startRight, startBottom;
+        
+        element.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const rect = element.getBoundingClientRect();
+            startRight = window.innerWidth - rect.right;
+            startBottom = window.innerHeight - rect.bottom;
+            
+            element.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            const deltaX = startX - e.clientX;
+            const deltaY = e.clientY - startY;
+            
+            const newRight = Math.max(10, Math.min(window.innerWidth - 60, startRight + deltaX));
+            const newBottom = Math.max(10, Math.min(window.innerHeight - 60, startBottom + deltaY));
+            
+            element.style.right = newRight + 'px';
+            element.style.bottom = newBottom + 'px';
+        });
+        
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                element.style.cursor = 'pointer';
+                
+                // Save position
+                const settings = getSettings();
+                settings.floatingButtonPosition = {
+                    right: parseInt(element.style.right),
+                    bottom: parseInt(element.style.bottom)
+                };
+                saveSettings();
+            }
+        });
     }
     
     // Create the main game panel
     function createGamePanel() {
+        // Remove existing panel if any
+        const existingPanel = document.getElementById('game-toolbox-panel');
+        if (existingPanel) {
+            existingPanel.remove();
+        }
+        
         const panel = document.createElement('div');
         panel.id = 'game-toolbox-panel';
         panel.className = 'game-toolbox-panel';
@@ -73,7 +135,7 @@
             <div class="game-toolbox-header">
                 <div class="game-toolbox-title">🎮 Game Toolbox</div>
                 <div class="game-toolbox-controls">
-                    <button class="game-toolbox-control-btn minimize-btn" title="Minimize">_</button>
+                    <button class="game-toolbox-control-btn minimize-btn" title="Minimize">−</button>
                     <button class="game-toolbox-control-btn close-btn" title="Close">✕</button>
                 </div>
             </div>
@@ -124,10 +186,37 @@
         
         // Create custom game dialog
         createCustomGameDialog();
+        
+        // Close panel when clicking outside (except floating button)
+        document.addEventListener('click', function(e) {
+            if (!panel.contains(e.target) && 
+                !document.getElementById('game-toolbox-floating-button').contains(e.target) &&
+                !document.getElementById('custom-game-dialog').contains(e.target)) {
+                if (panel.classList.contains('show') && !panel.classList.contains('minimized')) {
+                    closePanel();
+                }
+            }
+        });
+        
+        // Restore panel on minimize click when minimized
+        panel.addEventListener('click', function() {
+            if (panel.classList.contains('minimized')) {
+                panel.classList.remove('minimized');
+                const settings = getSettings();
+                settings.minimized = false;
+                saveSettings();
+            }
+        });
     }
     
     // Create custom game dialog
     function createCustomGameDialog() {
+        // Remove existing dialog if any
+        const existingDialog = document.getElementById('custom-game-dialog');
+        if (existingDialog) {
+            existingDialog.remove();
+        }
+        
         const dialog = document.createElement('div');
         dialog.id = 'custom-game-dialog';
         dialog.className = 'custom-game-dialog';
@@ -152,6 +241,15 @@
             dialog.classList.remove('show');
         });
         dialog.querySelector('#add-game-confirm').addEventListener('click', addCustomGame);
+        
+        // Add enter key support for inputs
+        dialog.querySelectorAll('.dialog-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addCustomGame();
+                }
+            });
+        });
     }
     
     // Toggle game panel visibility
@@ -184,10 +282,12 @@
     function closePanel() {
         const panel = document.getElementById('game-toolbox-panel');
         panel.classList.remove('show');
+        panel.classList.remove('minimized');
         
         // Save current game state if needed
         const settings = getSettings();
         settings.currentGame = null;
+        settings.minimized = false;
         saveSettings();
     }
     
@@ -630,8 +730,9 @@
         container.innerHTML = `
             <div class="builtin-game">
                 <iframe src="${customGame.url}" class="game-iframe" 
-                        sandbox="allow-scripts allow-same-origin"
+                        sandbox="allow-scripts allow-same-origin allow-forms"
                         title="${customGame.name}">
+                    <p>Your browser does not support iframes. Please visit <a href="${customGame.url}" target="_blank">${customGame.name}</a> directly.</p>
                 </iframe>
             </div>
         `;
@@ -646,6 +747,9 @@
         document.getElementById('game-name-input').value = '';
         document.getElementById('game-url-input').value = '';
         document.getElementById('game-icon-input').value = '';
+        
+        // Focus on first input
+        document.getElementById('game-name-input').focus();
     }
     
     // Add custom game
@@ -703,7 +807,28 @@
             startGame(id);
         });
         
+        // Add right-click context menu for custom games
+        gameItem.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            if (confirm(`Remove "${name}" from games?`)) {
+                removeCustomGame(id);
+            }
+        });
+        
         gameGrid.insertBefore(gameItem, addButton);
+    }
+    
+    // Remove custom game
+    function removeCustomGame(gameId) {
+        const settings = getSettings();
+        settings.customGames = settings.customGames.filter(game => game.id !== gameId);
+        saveSettings();
+        
+        // Remove from UI
+        const gameItem = document.querySelector(`[data-game="${gameId}"]`);
+        if (gameItem) {
+            gameItem.remove();
+        }
     }
     
     // Load saved state
@@ -722,7 +847,30 @@
                 panel.classList.add('minimized');
             }
         }
+        
+        // Restore current game if any
+        if (settings.currentGame) {
+            startGame(settings.currentGame);
+        }
     }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        const floatingButton = document.getElementById('game-toolbox-floating-button');
+        if (floatingButton) {
+            // Ensure button stays within viewport
+            const rect = floatingButton.getBoundingClientRect();
+            const maxRight = window.innerWidth - 60;
+            const maxBottom = window.innerHeight - 60;
+            
+            if (rect.right > window.innerWidth) {
+                floatingButton.style.right = '30px';
+            }
+            if (rect.bottom > window.innerHeight) {
+                floatingButton.style.bottom = '30px';
+            }
+        }
+    });
     
     // jQuery ready
     jQuery(function() {
