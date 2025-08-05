@@ -1,0 +1,12 @@
+{
+  "display_name": "Game Toolbox",
+  "loading_order": 100,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "Game Toolbox Developer",
+  "version": "1.0.0",
+  "homePage": "https://github.com/yourusername/st-game-toolbox",
+  "auto_update": true
+}

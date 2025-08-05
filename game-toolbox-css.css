@@ -1,0 +1,378 @@
+/* Game Toolbox Styles */
+.game-toolbox-button {
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.game-toolbox-button:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.game-toolbox-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--SmartThemeBodyColor);
+    border: 2px solid var(--SmartThemeBorderColor);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    width: 600px;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: none;
+}
+
+.game-toolbox-panel.show {
+    display: block;
+}
+
+.game-toolbox-panel.minimized {
+    width: 200px;
+    height: 40px;
+    top: auto;
+    bottom: 20px;
+    left: 20px;
+    transform: none;
+}
+
+.game-toolbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: var(--SmartThemeBlurTintColor);
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 8px 8px 0 0;
+}
+
+.game-toolbox-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.game-toolbox-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.game-toolbox-control-btn {
+    background: none;
+    border: none;
+    color: var(--SmartThemeBodyTextColor);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.game-toolbox-control-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.game-toolbox-content {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(80vh - 60px);
+}
+
+.game-toolbox-panel.minimized .game-toolbox-content {
+    display: none;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 20px;
+}
+
+.game-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.game-item:hover {
+    transform: scale(1.1);
+}
+
+.game-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--SmartThemeBlurTintColor);
+    border: 2px solid var(--SmartThemeBorderColor);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.game-name {
+    font-size: 14px;
+    text-align: center;
+}
+
+.add-game-btn {
+    border: 2px dashed var(--SmartThemeBorderColor);
+    background: transparent;
+}
+
+.add-game-btn .game-icon {
+    border-style: dashed;
+}
+
+/* Game Container */
+.game-container {
+    display: none;
+    height: 500px;
+    overflow: hidden;
+}
+
+.game-container.show {
+    display: block;
+}
+
+.game-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+}
+
+.back-to-menu {
+    margin-bottom: 15px;
+    padding: 8px 15px;
+    background: var(--SmartThemeBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.back-to-menu:hover {
+    background: var(--SmartThemeBorderColor);
+}
+
+/* Built-in Games Styles */
+.builtin-game {
+    width: 100%;
+    height: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Minesweeper Styles */
+.minesweeper-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.minesweeper-grid {
+    display: grid;
+    gap: 2px;
+    background: var(--SmartThemeBorderColor);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.mine-cell {
+    width: 30px;
+    height: 30px;
+    background: var(--SmartThemeBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    user-select: none;
+}
+
+.mine-cell:hover:not(.revealed):not(.flagged) {
+    background: var(--SmartThemeBorderColor);
+}
+
+.mine-cell.revealed {
+    background: var(--SmartThemeBodyColor);
+    cursor: default;
+}
+
+.mine-cell.mine {
+    background: #ff4444;
+    color: white;
+}
+
+.mine-cell.flagged {
+    background: #ffaa00;
+}
+
+.mine-cell.number-1 { color: #0000ff; }
+.mine-cell.number-2 { color: #008000; }
+.mine-cell.number-3 { color: #ff0000; }
+.mine-cell.number-4 { color: #000080; }
+.mine-cell.number-5 { color: #800000; }
+.mine-cell.number-6 { color: #008080; }
+.mine-cell.number-7 { color: #000000; }
+.mine-cell.number-8 { color: #808080; }
+
+/* Sudoku Styles */
+.sudoku-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 1px;
+    background: var(--SmartThemeBorderColor);
+    padding: 2px;
+    border: 3px solid var(--SmartThemeBorderColor);
+    border-radius: 5px;
+}
+
+.sudoku-cell {
+    width: 40px;
+    height: 40px;
+    background: var(--SmartThemeBodyColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    position: relative;
+}
+
+.sudoku-cell:nth-child(3n):not(:nth-child(9n)) {
+    border-right: 2px solid var(--SmartThemeBorderColor);
+}
+
+.sudoku-cell:nth-child(n+19):nth-child(-n+27),
+.sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 2px solid var(--SmartThemeBorderColor);
+}
+
+.sudoku-cell.fixed {
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyTextColor);
+}
+
+.sudoku-cell.selected {
+    background: rgba(0, 123, 255, 0.2);
+}
+
+.sudoku-cell.error {
+    color: #ff0000;
+}
+
+.sudoku-cell input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    outline: none;
+}
+
+.number-buttons {
+    display: flex;
+    gap: 5px;
+    margin-top: 15px;
+}
+
+.number-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    background: var(--SmartThemeBlurTintColor);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+.number-btn:hover {
+    background: var(--SmartThemeBorderColor);
+}
+
+/* Custom Game Dialog */
+.custom-game-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--SmartThemeBodyColor);
+    border: 2px solid var(--SmartThemeBorderColor);
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 10001;
+    width: 400px;
+    display: none;
+}
+
+.custom-game-dialog.show {
+    display: block;
+}
+
+.dialog-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.dialog-content {
+    margin-bottom: 20px;
+}
+
+.dialog-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 5px;
+    background: var(--SmartThemeBodyColor);
+    color: var(--SmartThemeBodyTextColor);
+    margin-bottom: 10px;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.dialog-btn {
+    padding: 8px 15px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    background: var(--SmartThemeBlurTintColor);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.dialog-btn:hover {
+    background: var(--SmartThemeBorderColor);
+}
+
+.dialog-btn.primary {
+    background: var(--SmartThemeQuoteColor);
+    color: white;
+}
