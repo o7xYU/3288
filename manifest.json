@@ -3,8 +3,7 @@
   "display_name": "Game Toolbox",
   "author": "Your Name",
   "description": "An extension that adds a toolbox of classic games like Minesweeper and Sudoku, embeddable directly in the UI.",
-  "version": "1.0.0",
-  "icon": "icon.svg",
+  "version": "1.2.0",
   "js": ["script.js"],
   "css": ["style.css"]
 }
