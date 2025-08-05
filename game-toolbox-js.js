@@ -1,10 +1,9 @@
 // Game Toolbox Extension for SillyTavern
 (function() {
+    'use strict';
+    
     const MODULE_NAME = 'game_toolbox';
     const DEBUG_PREFIX = `<${MODULE_NAME}>`;
-    
-    let extensionSettings = null;
-    let saveSettingsDebounced = null;
     
     // Default settings
     const defaultSettings = {
@@ -13,28 +12,8 @@
         currentGame: null
     };
     
-    // Get or initialize settings
-    function getSettings() {
-        if (!extensionSettings[MODULE_NAME]) {
-            extensionSettings[MODULE_NAME] = structuredClone(defaultSettings);
-        }
-        
-        // Ensure all default keys exist
-        for (const key in defaultSettings) {
-            if (extensionSettings[MODULE_NAME][key] === undefined) {
-                extensionSettings[MODULE_NAME][key] = defaultSettings[key];
-            }
-        }
-        
-        return extensionSettings[MODULE_NAME];
-    }
-    
     // Initialize the extension
-    async function init() {
-        const context = SillyTavern.getContext();
-        extensionSettings = context.extensionSettings;
-        saveSettingsDebounced = context.saveSettingsDebounced;
-        
+    function init() {
         console.log(DEBUG_PREFIX, 'Initializing Game Toolbox');
         
         // Add game button to extension menu
@@ -47,10 +26,31 @@
         loadState();
     }
     
+    // Get or initialize settings
+    function getSettings() {
+        const context = SillyTavern.getContext();
+        const extensionSettings = context.extensionSettings;
+        
+        if (!extensionSettings[MODULE_NAME]) {
+            extensionSettings[MODULE_NAME] = Object.assign({}, defaultSettings);
+        }
+        
+        return extensionSettings[MODULE_NAME];
+    }
+    
+    // Save settings
+    function saveSettings() {
+        const context = SillyTavern.getContext();
+        context.saveSettingsDebounced();
+    }
+    
     // Add game button to extension menu
     function addGameButton() {
         const extensionMenu = document.getElementById('extensionsMenu');
-        if (!extensionMenu) return;
+        if (!extensionMenu) {
+            console.error(DEBUG_PREFIX, 'Extensions menu not found');
+            return;
+        }
         
         const gameButton = document.createElement('div');
         gameButton.id = 'game-toolbox-button';
@@ -110,7 +110,7 @@
         
         // Game item click handlers
         panel.querySelectorAll('.game-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+            item.addEventListener('click', function(e) {
                 const game = e.currentTarget.dataset.game;
                 const action = e.currentTarget.dataset.action;
                 
@@ -140,14 +140,17 @@
                 <input type="text" class="dialog-input" id="game-icon-input" placeholder="Icon (emoji or text)">
             </div>
             <div class="dialog-buttons">
-                <button class="dialog-btn" onclick="document.getElementById('custom-game-dialog').classList.remove('show')">Cancel</button>
+                <button class="dialog-btn cancel-btn">Cancel</button>
                 <button class="dialog-btn primary" id="add-game-confirm">Add</button>
             </div>
         `;
         
         document.body.appendChild(dialog);
         
-        // Add confirm button handler
+        // Add button handlers
+        dialog.querySelector('.cancel-btn').addEventListener('click', function() {
+            dialog.classList.remove('show');
+        });
         dialog.querySelector('#add-game-confirm').addEventListener('click', addCustomGame);
     }
     
@@ -174,7 +177,7 @@
         
         const settings = getSettings();
         settings.minimized = panel.classList.contains('minimized');
-        saveSettingsDebounced();
+        saveSettings();
     }
     
     // Close panel
@@ -185,7 +188,7 @@
         // Save current game state if needed
         const settings = getSettings();
         settings.currentGame = null;
-        saveSettingsDebounced();
+        saveSettings();
     }
     
     // Show game menu
@@ -195,7 +198,7 @@
         
         const settings = getSettings();
         settings.currentGame = null;
-        saveSettingsDebounced();
+        saveSettings();
     }
     
     // Start a game
@@ -213,7 +216,7 @@
         // Save current game
         const settings = getSettings();
         settings.currentGame = gameName;
-        saveSettingsDebounced();
+        saveSettings();
         
         // Load the appropriate game
         switch(gameName) {
@@ -234,7 +237,8 @@
     
     // Load Minesweeper game
     function loadMinesweeper(container) {
-        const game = {
+        // Create game state
+        window.minesweeperGame = {
             rows: 10,
             cols: 10,
             mines: 15,
@@ -245,16 +249,18 @@
             firstClick: true
         };
         
-        function initGame() {
+        window.initMinesweeper = function() {
+            const game = window.minesweeperGame;
             game.grid = Array(game.rows).fill().map(() => Array(game.cols).fill(0));
             game.revealed = Array(game.rows).fill().map(() => Array(game.cols).fill(false));
             game.flagged = Array(game.rows).fill().map(() => Array(game.cols).fill(false));
             game.gameOver = false;
             game.firstClick = true;
-            renderGame();
-        }
+            renderMinesweeper();
+        };
         
-        function placeMines(excludeRow, excludeCol) {
+        window.placeMines = function(excludeRow, excludeCol) {
+            const game = window.minesweeperGame;
             let minesPlaced = 0;
             while (minesPlaced < game.mines) {
                 const row = Math.floor(Math.random() * game.rows);
@@ -276,9 +282,10 @@
                     }
                 }
             }
-        }
+        };
         
-        function revealCell(row, col) {
+        window.revealCell = function(row, col) {
+            const game = window.minesweeperGame;
             if (game.gameOver || game.revealed[row][col] || game.flagged[row][col]) return;
             
             if (game.firstClick) {
@@ -291,7 +298,7 @@
             if (game.grid[row][col] === -1) {
                 game.gameOver = true;
                 revealAllMines();
-                alert('Game Over! You hit a mine!');
+                setTimeout(() => alert('Game Over! You hit a mine!'), 100);
             } else if (game.grid[row][col] === 0) {
                 // Reveal adjacent cells
                 for (let dr = -1; dr <= 1; dr++) {
@@ -305,19 +312,21 @@
                 }
             }
             
-            checkWin();
-            renderGame();
-        }
+            checkMinesweeperWin();
+            renderMinesweeper();
+        };
         
-        function toggleFlag(row, col, e) {
-            e.preventDefault();
+        window.toggleFlag = function(row, col) {
+            const game = window.minesweeperGame;
             if (game.gameOver || game.revealed[row][col]) return;
             
             game.flagged[row][col] = !game.flagged[row][col];
-            renderGame();
-        }
+            renderMinesweeper();
+            return false; // Prevent context menu
+        };
         
-        function revealAllMines() {
+        window.revealAllMines = function() {
+            const game = window.minesweeperGame;
             for (let r = 0; r < game.rows; r++) {
                 for (let c = 0; c < game.cols; c++) {
                     if (game.grid[r][c] === -1) {
@@ -325,9 +334,10 @@
                     }
                 }
             }
-        }
+        };
         
-        function checkWin() {
+        window.checkMinesweeperWin = function() {
+            const game = window.minesweeperGame;
             let cellsToReveal = 0;
             for (let r = 0; r < game.rows; r++) {
                 for (let c = 0; c < game.cols; c++) {
@@ -339,11 +349,12 @@
             
             if (cellsToReveal === 0) {
                 game.gameOver = true;
-                alert('Congratulations! You won!');
+                setTimeout(() => alert('Congratulations! You won!'), 100);
             }
-        }
+        };
         
-        function renderGame() {
+        window.renderMinesweeper = function() {
+            const game = window.minesweeperGame;
             const gridHtml = [];
             for (let r = 0; r < game.rows; r++) {
                 for (let c = 0; c < game.cols; c++) {
@@ -366,9 +377,8 @@
                     
                     gridHtml.push(`
                         <div class="${cellClass}" 
-                             data-row="${r}" 
-                             data-col="${c}"
-                             oncontextmenu="return false;">
+                             onclick="revealCell(${r}, ${c})"
+                             oncontextmenu="return toggleFlag(${r}, ${c})">
                             ${cellContent}
                         </div>
                     `);
@@ -378,7 +388,7 @@
             container.innerHTML = `
                 <div class="builtin-game">
                     <div class="minesweeper-controls">
-                        <button id="new-minesweeper">New Game</button>
+                        <button onclick="initMinesweeper()">New Game</button>
                         <span>Mines: ${game.mines}</span>
                     </div>
                     <div class="minesweeper-grid" style="grid-template-columns: repeat(${game.cols}, 30px);">
@@ -386,25 +396,15 @@
                     </div>
                 </div>
             `;
-            
-            // Add event listeners
-            container.querySelector('#new-minesweeper').addEventListener('click', initGame);
-            
-            container.querySelectorAll('.mine-cell').forEach(cell => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                
-                cell.addEventListener('click', () => revealCell(row, col));
-                cell.addEventListener('contextmenu', (e) => toggleFlag(row, col, e));
-            });
-        }
+        };
         
-        initGame();
+        initMinesweeper();
     }
     
     // Load Sudoku game
     function loadSudoku(container) {
-        const game = {
+        // Create game state
+        window.sudokuGame = {
             grid: [],
             solution: [],
             fixed: [],
@@ -412,10 +412,11 @@
             errors: []
         };
         
-        function generateSudoku() {
+        window.generateSudoku = function() {
+            const game = window.sudokuGame;
             // Generate a complete valid sudoku solution
             game.solution = Array(9).fill().map(() => Array(9).fill(0));
-            fillGrid(game.solution);
+            fillSudokuGrid(game.solution);
             
             // Create puzzle by removing numbers
             game.grid = game.solution.map(row => [...row]);
@@ -436,10 +437,10 @@
                 }
             }
             
-            renderGame();
-        }
+            renderSudoku();
+        };
         
-        function fillGrid(grid) {
+        window.fillSudokuGrid = function(grid) {
             // Simplified sudoku generator
             const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
             
@@ -456,14 +457,14 @@
             
             // Fill remaining cells
             solveSudoku(grid);
-        }
+        };
         
-        function solveSudoku(grid) {
+        window.solveSudoku = function(grid) {
             for (let row = 0; row < 9; row++) {
                 for (let col = 0; col < 9; col++) {
                     if (grid[row][col] === 0) {
                         for (let num = 1; num <= 9; num++) {
-                            if (isValidMove(grid, row, col, num)) {
+                            if (isValidSudokuMove(grid, row, col, num)) {
                                 grid[row][col] = num;
                                 if (solveSudoku(grid)) {
                                     return true;
@@ -476,9 +477,9 @@
                 }
             }
             return true;
-        }
+        };
         
-        function isValidMove(grid, row, col, num) {
+        window.isValidSudokuMove = function(grid, row, col, num) {
             // Check row
             for (let c = 0; c < 9; c++) {
                 if (grid[row][c] === num) return false;
@@ -499,23 +500,26 @@
             }
             
             return true;
-        }
+        };
         
-        function selectCell(row, col) {
+        window.selectSudokuCell = function(row, col) {
+            const game = window.sudokuGame;
             game.selected = { row, col };
-            renderGame();
-        }
+            renderSudoku();
+        };
         
-        function inputNumber(num) {
+        window.inputSudokuNumber = function(num) {
+            const game = window.sudokuGame;
             if (!game.selected || game.fixed[game.selected.row][game.selected.col]) return;
             
             game.grid[game.selected.row][game.selected.col] = num;
-            checkErrors();
-            checkWin();
-            renderGame();
-        }
+            checkSudokuErrors();
+            checkSudokuWin();
+            renderSudoku();
+        };
         
-        function checkErrors() {
+        window.checkSudokuErrors = function() {
+            const game = window.sudokuGame;
             game.errors = [];
             
             for (let row = 0; row < 9; row++) {
@@ -550,9 +554,10 @@
                     }
                 }
             }
-        }
+        };
         
-        function checkWin() {
+        window.checkSudokuWin = function() {
+            const game = window.sudokuGame;
             // Check if puzzle is complete and correct
             for (let row = 0; row < 9; row++) {
                 for (let col = 0; col < 9; col++) {
@@ -566,9 +571,10 @@
             }
             
             return false;
-        }
+        };
         
-        function renderGame() {
+        window.renderSudoku = function() {
+            const game = window.sudokuGame;
             const gridHtml = [];
             
             for (let row = 0; row < 9; row++) {
@@ -591,8 +597,7 @@
                     
                     gridHtml.push(`
                         <div class="${cellClass}" 
-                             data-row="${row}" 
-                             data-col="${col}">
+                             onclick="selectSudokuCell(${row}, ${col})">
                             ${value}
                         </div>
                     `);
@@ -602,39 +607,20 @@
             container.innerHTML = `
                 <div class="builtin-game">
                     <div class="sudoku-controls">
-                        <button id="new-sudoku">New Game</button>
-                        <button id="clear-cell">Clear Cell</button>
+                        <button onclick="generateSudoku()">New Game</button>
+                        <button onclick="if(sudokuGame.selected && !sudokuGame.fixed[sudokuGame.selected.row][sudokuGame.selected.col]) inputSudokuNumber(0)">Clear Cell</button>
                     </div>
                     <div class="sudoku-grid">
                         ${gridHtml.join('')}
                     </div>
                     <div class="number-buttons">
                         ${[1,2,3,4,5,6,7,8,9].map(num => 
-                            `<button class="number-btn" data-num="${num}">${num}</button>`
+                            `<button class="number-btn" onclick="inputSudokuNumber(${num})">${num}</button>`
                         ).join('')}
                     </div>
                 </div>
             `;
-            
-            // Add event listeners
-            container.querySelector('#new-sudoku').addEventListener('click', generateSudoku);
-            container.querySelector('#clear-cell').addEventListener('click', () => {
-                if (game.selected && !game.fixed[game.selected.row][game.selected.col]) {
-                    inputNumber(0);
-                }
-            });
-            
-            container.querySelectorAll('.sudoku-cell').forEach(cell => {
-                const row = parseInt(cell.dataset.row);
-                const col = parseInt(cell.dataset.col);
-                cell.addEventListener('click', () => selectCell(row, col));
-            });
-            
-            container.querySelectorAll('.number-btn').forEach(btn => {
-                const num = parseInt(btn.dataset.num);
-                btn.addEventListener('click', () => inputNumber(num));
-            });
-        }
+        };
         
         generateSudoku();
     }
@@ -682,16 +668,16 @@
         }
         
         const settings = getSettings();
-        const gameId = `custom-${Date.now()}`;
+        const gameId = 'custom-' + Date.now();
         
         settings.customGames.push({
             id: gameId,
-            name,
-            url,
-            icon
+            name: name,
+            url: url,
+            icon: icon
         });
         
-        saveSettingsDebounced();
+        saveSettings();
         
         // Add to UI
         addCustomGameToUI(gameId, name, icon);
@@ -713,7 +699,9 @@
             <div class="game-name">${name}</div>
         `;
         
-        gameItem.addEventListener('click', () => startGame(id));
+        gameItem.addEventListener('click', function() {
+            startGame(id);
+        });
         
         gameGrid.insertBefore(gameItem, addButton);
     }
@@ -723,26 +711,27 @@
         const settings = getSettings();
         
         // Load custom games
-        settings.customGames.forEach(game => {
+        settings.customGames.forEach(function(game) {
             addCustomGameToUI(game.id, game.name, game.icon);
         });
         
         // Restore minimized state
         if (settings.minimized) {
             const panel = document.getElementById('game-toolbox-panel');
-            if (panel.classList.contains('show')) {
+            if (panel && panel.classList.contains('show')) {
                 panel.classList.add('minimized');
             }
         }
     }
     
     // jQuery ready
-    jQuery(async () => {
+    jQuery(function() {
         // Wait for SillyTavern to be ready
-        while (!window.SillyTavern?.getContext) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        
-        await init();
+        const checkReady = setInterval(function() {
+            if (window.SillyTavern && window.SillyTavern.getContext) {
+                clearInterval(checkReady);
+                init();
+            }
+        }, 100);
     });
 })();
