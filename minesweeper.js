@@ -8,13 +8,13 @@ export const minesweeperGameHtml = `
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
         #game-container { display: grid; border: 2px solid #7b7b7b; }
-       .cell { width: 30px; height: 30px; background-color: #bdbdbd; border: 2px outset #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; }
-       .cell.revealed { background-color: #d0d0d0; border: 1px solid #7b7b7b; }
-       .cell.bomb { background-color: red; }
-       .cell.flag::after { content: '🚩'; }
-       .c1 { color: #0000ff; }.c2 { color: #008200; }.c3 { color: #ff0000; }
-       .c4 { color: #000084; }.c5 { color: #840000; }.c6 { color: #008284; }
-       .c7 { color: #840084; }.c8 { color: #757575; }
+     .cell { width: 30px; height: 30px; background-color: #bdbdbd; border: 2px outset #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; }
+     .cell.revealed { background-color: #d0d0d0; border: 1px solid #7b7b7b; }
+     .cell.bomb { background-color: red; }
+     .cell.flag::after { content: '🚩'; }
+     .c1 { color: #0000ff; }.c2 { color: #008200; }.c3 { color: #ff0000; }
+     .c4 { color: #000084; }.c5 { color: #840000; }.c6 { color: #008284; }
+     .c7 { color: #840084; }.c8 { color: #757575; }
     </style>
 </head>
 <body>
