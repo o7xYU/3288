@@ -1,16 +1,28 @@
-/* Extension Menu Button */
-#game-toolbox-button {
-    cursor: pointer;
-    font-size: 20px;
-    padding: 5px;
+/* Floating Action Button */
+#game-toolbox-floating-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 55px;
+    height: 55px;
+    background-color: #3a3a4a;
+    border: 1px solid #555;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 28px;
+    color: white;
+    cursor: move;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    user-select: none;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-#game-toolbox-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
+#game-toolbox-floating-button:hover {
+    transform: scale(1.1);
+    background-color: #4a4a5a;
 }
 
 /* Main Panel */
@@ -31,6 +43,10 @@
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+
+#game-toolbox-panel.hidden {
+    display: none;
 }
 
 #game-toolbox-panel.minimized {
