@@ -1,14 +1,16 @@
-import { minesweeperGameHtml } from './games/minesweeper.js';
-import { sudokuGameHtml } from './games/sudoku.js';
+import { minesweeperGameHtml } from './minesweeper.js';
+import { sudokuGameHtml } from './sudoku.js';
 
 (function () {
     // Define constants for the extension
     const extensionName = "sillytavern-game-toolbox";
-    const L_STORAGE_KEY_STATE = "game-toolbox-panel-state";
+    const L_STORAGE_KEY_PANEL_STATE = "game-toolbox-panel-state";
+    const L_STORAGE_KEY_BUTTON_POS = "game-toolbox-button-pos";
     const L_STORAGE_KEY_CUSTOM_GAMES = "game-toolbox-custom-games";
 
-    // Main state object
+    // Main state objects
     let panel;
+    let floatingButton;
     let panelState = {
         isOpen: false,
         isMinimized: false,
@@ -17,62 +19,39 @@ import { sudokuGameHtml } from './games/sudoku.js';
         width: '800px',
         height: '600px'
     };
+    let buttonPos = { top: null, left: null, bottom: '20px', right: '20px' };
     let customGames =;
 
     // Built-in games configuration
     const builtInGames =;
 
-    // Function to save panel state to local storage
-    async function savePanelState() {
+    // --- DATA PERSISTENCE FUNCTIONS ---
+    async function saveData(key, data) {
         const { localforage } = SillyTavern.libs;
         try {
-            await localforage.setItem(L_STORAGE_KEY_STATE, panelState);
+            await localforage.setItem(key, data);
         } catch (err) {
-            console.error(`${extensionName}: Failed to save panel state`, err);
+            console.error(`${extensionName}: Failed to save data for key ${key}`, err);
         }
     }
 
-    // Function to load panel state from local storage
-    async function loadPanelState() {
+    async function loadData(key, defaultData) {
         const { localforage } = SillyTavern.libs;
         try {
-            const savedState = await localforage.getItem(L_STORAGE_KEY_STATE);
-            if (savedState) {
-                panelState = {...panelState,...savedState };
-            }
+            const savedData = await localforage.getItem(key);
+            return savedData? {...defaultData,...savedData } : defaultData;
         } catch (err) {
-            console.error(`${extensionName}: Failed to load panel state`, err);
+            console.error(`${extensionName}: Failed to load data for key ${key}`, err);
+            return defaultData;
         }
     }
 
-    // Function to save custom games to local storage
-    async function saveCustomGames() {
-        const { localforage } = SillyTavern.libs;
-        try {
-            await localforage.setItem(L_STORAGE_KEY_CUSTOM_GAMES, customGames);
-        } catch (err) {
-            console.error(`${extensionName}: Failed to save custom games`, err);
-        }
-    }
-
-    // Function to load custom games from local storage
-    async function loadCustomGames() {
-        const { localforage } = SillyTavern.libs;
-        try {
-            const savedGames = await localforage.getItem(L_STORAGE_KEY_CUSTOM_GAMES);
-            if (savedGames && Array.isArray(savedGames)) {
-                customGames = savedGames;
-            }
-        } catch (err) {
-            console.error(`${extensionName}: Failed to load custom games`, err);
-        }
-    }
-
+    // --- UI CREATION AND MANAGEMENT ---
 
     // Function to create and show the main panel
     function showPanel() {
         if (panel) {
-            panel.style.display = 'flex';
+            panel.classList.remove('hidden');
             panelState.isOpen = true;
             return;
         }
@@ -87,44 +66,47 @@ import { sudokuGameHtml } from './games/sudoku.js';
                     <button id="gt-close-btn">×</button>
                 </div>
             </div>
-            <div class="gt-panel-content" id="gt-panel-content">
-                </div>
+            <div class="gt-panel-content" id="gt-panel-content"></div>
         `;
         document.body.appendChild(panel);
         panelState.isOpen = true;
 
         // Apply saved state
-        panel.style.top = panelState.top;
-        panel.style.left = panelState.left;
-        panel.style.width = panelState.width;
-        panel.style.height = panelState.height;
-        if (panelState.isMinimized) {
-            panel.classList.add('minimized');
-        }
+        Object.assign(panel.style, { top: panelState.top, left: panelState.left, width: panelState.width, height: panelState.height });
+        if (panelState.isMinimized) panel.classList.add('minimized');
 
         // Add event listeners
         document.getElementById('gt-close-btn').addEventListener('click', hidePanel);
         document.getElementById('gt-minimize-btn').addEventListener('click', toggleMinimize);
-        makeDraggable(panel, panel.querySelector('.gt-panel-header'));
+        makeDraggable(panel, panel.querySelector('.gt-panel-header'), (el) => {
+            panelState.top = el.style.top;
+            panelState.left = el.style.left;
+            saveData(L_STORAGE_KEY_PANEL_STATE, panelState);
+        });
 
         renderGameGrid();
     }
 
-    // Function to hide the panel
     function hidePanel() {
         if (panel) {
-            panel.remove();
-            panel = null;
+            panel.classList.add('hidden');
             panelState.isOpen = false;
         }
     }
 
-    // Function to toggle panel minimization
     function toggleMinimize() {
         if (!panel) return;
         panelState.isMinimized =!panelState.isMinimized;
         panel.classList.toggle('minimized', panelState.isMinimized);
-        savePanelState();
+        saveData(L_STORAGE_KEY_PANEL_STATE, panelState);
+    }
+
+    function togglePanel() {
+        if (panel && panelState.isOpen) {
+            hidePanel();
+        } else {
+            showPanel();
+        }
     }
 
     // Function to render the main game selection grid
@@ -141,7 +123,7 @@ import { sudokuGameHtml } from './games/sudoku.js';
         });
 
         // Render custom games
-        customGames.forEach((game, index) => {
+        customGames.forEach((game) => {
             const iconEl = createGameIcon(game.name, '🌐');
             iconEl.addEventListener('click', () => renderGameView(game, true));
             grid.appendChild(iconEl);
@@ -153,14 +135,10 @@ import { sudokuGameHtml } from './games/sudoku.js';
         grid.appendChild(addIconEl);
     }
 
-    // Helper to create a game icon element
     function createGameIcon(name, icon) {
         const iconEl = document.createElement('div');
         iconEl.className = 'gt-game-icon';
-        iconEl.innerHTML = `
-            <div class="icon-bg">${icon}</div>
-            <span class="icon-label">${name}</span>
-        `;
+        iconEl.innerHTML = `<div class="icon-bg">${icon}</div><span class="icon-label">${name}</span>`;
         return iconEl;
     }
 
@@ -216,20 +194,24 @@ import { sudokuGameHtml } from './games/sudoku.js';
         `;
         document.body.appendChild(modalBackdrop);
 
+        const nameInput = document.getElementById('gt-game-name-input');
+        const urlInput = document.getElementById('gt-game-url-input');
+        const listElement = document.getElementById('gt-custom-games-ul');
+
         modalBackdrop.querySelector('.gt-modal-cancel-btn').addEventListener('click', () => modalBackdrop.remove());
         modalBackdrop.querySelector('.gt-modal-save-btn').addEventListener('click', () => {
-            const name = document.getElementById('gt-game-name-input').value.trim();
-            const url = document.getElementById('gt-game-url-input').value.trim();
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim();
             if (name && url) {
                 try {
                     new URL(url); // Validate URL format
                     customGames.push({ name, url });
-                    saveCustomGames().then(() => {
-                        renderCustomGamesList(document.getElementById('gt-custom-games-ul'));
+                    saveData(L_STORAGE_KEY_CUSTOM_GAMES, customGames).then(() => {
+                        renderCustomGamesList(listElement);
                         renderGameGrid(); // Update main grid
                     });
-                     document.getElementById('gt-game-name-input').value = '';
-                     document.getElementById('gt-game-url-input').value = '';
+                    nameInput.value = '';
+                    urlInput.value = '';
                 } catch (_) {
                     alert('Please enter a valid URL.');
                 }
@@ -238,11 +220,10 @@ import { sudokuGameHtml } from './games/sudoku.js';
             }
         });
         
-        // Prevent clicks inside the modal from closing it
         modalBackdrop.querySelector('.gt-modal-content').addEventListener('click', (e) => e.stopPropagation());
         modalBackdrop.addEventListener('click', () => modalBackdrop.remove());
 
-        renderCustomGamesList(document.getElementById('gt-custom-games-ul'));
+        renderCustomGamesList(listElement);
     }
 
     function renderCustomGamesList(ulElement) {
@@ -252,7 +233,7 @@ import { sudokuGameHtml } from './games/sudoku.js';
             li.innerHTML = `<span>${game.name}</span> <button data-index="${index}">Delete</button>`;
             li.querySelector('button').addEventListener('click', () => {
                 customGames.splice(index, 1);
-                saveCustomGames().then(() => {
+                saveData(L_STORAGE_KEY_CUSTOM_GAMES, customGames).then(() => {
                     renderCustomGamesList(ulElement);
                     renderGameGrid(); // Update main grid
                 });
@@ -261,8 +242,9 @@ import { sudokuGameHtml } from './games/sudoku.js';
         });
     }
 
-    // Utility to make an element draggable
-    function makeDraggable(element, handle) {
+    // --- UTILITY FUNCTIONS ---
+
+    function makeDraggable(element, handle, onDragEnd) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         handle.onmousedown = dragMouseDown;
 
@@ -280,6 +262,8 @@ import { sudokuGameHtml } from './games/sudoku.js';
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
+            element.style.bottom = 'auto'; // Remove conflicting properties
+            element.style.right = 'auto';
             element.style.top = (element.offsetTop - pos2) + "px";
             element.style.left = (element.offsetLeft - pos1) + "px";
         }
@@ -287,37 +271,40 @@ import { sudokuGameHtml } from './games/sudoku.js';
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
-            // Save final position
-            panelState.top = element.style.top;
-            panelState.left = element.style.left;
-            savePanelState();
+            if (onDragEnd) onDragEnd(element);
         }
     }
 
-    // Main initialization function
+    // --- INITIALIZATION ---
+
     async function init() {
         // Load persistent data
-        await loadPanelState();
-        await loadCustomGames();
+        panelState = await loadData(L_STORAGE_KEY_PANEL_STATE, panelState);
+        buttonPos = await loadData(L_STORAGE_KEY_BUTTON_POS, buttonPos);
+        customGames = await loadData(L_STORAGE_KEY_CUSTOM_GAMES,);
 
-        // Create the extension button in the menu
-        const buttonContainer = document.querySelector('#extension_menu_button_container');
-        if (buttonContainer) {
-            const button = document.createElement('div');
-            button.id = 'game-toolbox-button';
-            button.innerHTML = '$\🎮$';
-            button.title = 'Game Toolbox';
-            button.addEventListener('click', () => {
-                if (panelState.isOpen) {
-                    hidePanel();
-                } else {
-                    showPanel();
-                }
-            });
-            buttonContainer.appendChild(button);
-        } else {
-            console.error(`${extensionName}: Could not find button container.`);
-        }
+        // Create the floating action button
+        floatingButton = document.createElement('div');
+        floatingButton.id = 'game-toolbox-floating-button';
+        floatingButton.innerHTML = '🎮';
+        floatingButton.title = 'Game Toolbox';
+        
+        // Apply saved position
+        Object.assign(floatingButton.style, {
+            top: buttonPos.top,
+            left: buttonPos.left,
+            bottom: buttonPos.bottom,
+            right: buttonPos.right
+        });
+
+        floatingButton.addEventListener('click', togglePanel);
+        document.body.appendChild(floatingButton);
+
+        // Make it draggable and save its position on drag end
+        makeDraggable(floatingButton, floatingButton, (el) => {
+            buttonPos = { top: el.style.top, left: el.style.left, bottom: null, right: null };
+            saveData(L_STORAGE_KEY_BUTTON_POS, buttonPos);
+        });
     }
 
     // Wait for SillyTavern to be ready, then initialize
