@@ -1,15 +1,37 @@
 /* Game Toolbox Styles */
-.game-toolbox-button {
-    padding: 8px;
+
+/* Floating Game Button */
+.game-toolbox-floating-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--SmartThemeBlurTintColor);
+    border: 2px solid var(--SmartThemeBorderColor);
+    border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
 }
 
-.game-toolbox-button:hover {
-    opacity: 0.8;
+.game-toolbox-floating-button:hover {
     transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    background: var(--SmartThemeBorderColor);
 }
 
+.game-toolbox-floating-button:active {
+    transform: scale(0.95);
+}
+
+/* Panel styles */
 .game-toolbox-panel {
     position: fixed;
     top: 50%;
@@ -17,13 +39,26 @@
     transform: translate(-50%, -50%);
     background: var(--SmartThemeBodyColor);
     border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     z-index: 10000;
     width: 600px;
     max-width: 90vw;
     max-height: 80vh;
     display: none;
+    backdrop-filter: blur(20px);
+    animation: panelFadeIn 0.3s ease-out;
+}
+
+@keyframes panelFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 .game-toolbox-panel.show {
@@ -31,27 +66,59 @@
 }
 
 .game-toolbox-panel.minimized {
-    width: 200px;
-    height: 40px;
+    width: 250px;
+    height: 50px;
     top: auto;
-    bottom: 20px;
-    left: 20px;
+    bottom: 100px;
+    right: 30px;
+    left: auto;
     transform: none;
+    border-radius: 25px;
+    animation: panelMinimize 0.3s ease-out;
+}
+
+@keyframes panelMinimize {
+    from {
+        width: 600px;
+        height: auto;
+        top: 50%;
+        right: auto;
+        bottom: auto;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    to {
+        width: 250px;
+        height: 50px;
+        top: auto;
+        right: 30px;
+        bottom: 100px;
+        left: auto;
+        transform: none;
+    }
 }
 
 .game-toolbox-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
+    padding: 15px 20px;
     background: var(--SmartThemeBlurTintColor);
     border-bottom: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 8px 8px 0 0;
+    border-radius: 13px 13px 0 0;
+    backdrop-filter: blur(10px);
+}
+
+.game-toolbox-panel.minimized .game-toolbox-header {
+    border-radius: 23px;
+    border-bottom: none;
+    padding: 10px 15px;
 }
 
 .game-toolbox-title {
     font-size: 18px;
     font-weight: bold;
+    color: var(--SmartThemeBodyTextColor);
 }
 
 .game-toolbox-controls {
@@ -65,19 +132,25 @@
     color: var(--SmartThemeBodyTextColor);
     cursor: pointer;
     font-size: 18px;
-    padding: 5px;
-    border-radius: 4px;
-    transition: background 0.2s;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .game-toolbox-control-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
 }
 
 .game-toolbox-content {
-    padding: 20px;
+    padding: 25px;
     overflow-y: auto;
-    max-height: calc(80vh - 60px);
+    max-height: calc(80vh - 80px);
 }
 
 .game-toolbox-panel.minimized .game-toolbox-content {
@@ -86,8 +159,8 @@
 
 .game-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 25px;
 }
 
 .game-item {
@@ -95,11 +168,14 @@
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.3s ease;
+    padding: 15px;
+    border-radius: 12px;
 }
 
 .game-item:hover {
-    transform: scale(1.1);
+    transform: translateY(-5px);
+    background: var(--SmartThemeBlurTintColor);
 }
 
 .game-icon {
@@ -107,17 +183,25 @@
     height: 80px;
     background: var(--SmartThemeBlurTintColor);
     border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 15px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 40px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.game-item:hover .game-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .game-name {
     font-size: 14px;
     text-align: center;
+    font-weight: 500;
+    color: var(--SmartThemeBodyTextColor);
 }
 
 .add-game-btn {
@@ -127,6 +211,7 @@
 
 .add-game-btn .game-icon {
     border-style: dashed;
+    background: transparent;
 }
 
 /* Game Container */
@@ -144,21 +229,23 @@
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 .back-to-menu {
-    margin-bottom: 15px;
-    padding: 8px 15px;
+    margin-bottom: 20px;
+    padding: 10px 20px;
     background: var(--SmartThemeBlurTintColor);
     border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    font-weight: 500;
 }
 
 .back-to-menu:hover {
     background: var(--SmartThemeBorderColor);
+    transform: translateX(-5px);
 }
 
 /* Built-in Games Styles */
@@ -175,9 +262,22 @@
 /* Minesweeper Styles */
 .minesweeper-controls {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 15px;
+    margin-bottom: 25px;
     align-items: center;
+}
+
+.minesweeper-controls button {
+    padding: 8px 16px;
+    background: var(--SmartThemeBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.minesweeper-controls button:hover {
+    background: var(--SmartThemeBorderColor);
 }
 
 .minesweeper-grid {
@@ -185,7 +285,8 @@
     gap: 2px;
     background: var(--SmartThemeBorderColor);
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .mine-cell {
@@ -200,10 +301,12 @@
     font-weight: bold;
     font-size: 14px;
     user-select: none;
+    transition: all 0.2s ease;
 }
 
 .mine-cell:hover:not(.revealed):not(.flagged) {
     background: var(--SmartThemeBorderColor);
+    transform: scale(1.1);
 }
 
 .mine-cell.revealed {
@@ -232,9 +335,22 @@
 /* Sudoku Styles */
 .sudoku-controls {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 15px;
+    margin-bottom: 25px;
     align-items: center;
+}
+
+.sudoku-controls button {
+    padding: 8px 16px;
+    background: var(--SmartThemeBlurTintColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sudoku-controls button:hover {
+    background: var(--SmartThemeBorderColor);
 }
 
 .sudoku-grid {
@@ -242,9 +358,10 @@
     grid-template-columns: repeat(9, 1fr);
     gap: 1px;
     background: var(--SmartThemeBorderColor);
-    padding: 2px;
+    padding: 3px;
     border: 3px solid var(--SmartThemeBorderColor);
-    border-radius: 5px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .sudoku-cell {
@@ -259,6 +376,11 @@
     font-size: 18px;
     font-weight: bold;
     position: relative;
+    transition: all 0.2s ease;
+}
+
+.sudoku-cell:hover {
+    background: var(--SmartThemeBlurTintColor);
 }
 
 .sudoku-cell:nth-child(3n):not(:nth-child(9n)) {
@@ -276,11 +398,13 @@
 }
 
 .sudoku-cell.selected {
-    background: rgba(0, 123, 255, 0.2);
+    background: rgba(0, 123, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
 .sudoku-cell.error {
     color: #ff0000;
+    background: rgba(255, 0, 0, 0.1);
 }
 
 .sudoku-cell input {
@@ -296,23 +420,25 @@
 
 .number-buttons {
     display: flex;
-    gap: 5px;
-    margin-top: 15px;
+    gap: 8px;
+    margin-top: 20px;
 }
 
 .number-btn {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border: 1px solid var(--SmartThemeBorderColor);
     background: var(--SmartThemeBlurTintColor);
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    border-radius: 5px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
 .number-btn:hover {
     background: var(--SmartThemeBorderColor);
+    transform: scale(1.1);
 }
 
 /* Custom Game Dialog */
@@ -323,56 +449,136 @@
     transform: translate(-50%, -50%);
     background: var(--SmartThemeBodyColor);
     border: 2px solid var(--SmartThemeBorderColor);
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: 15px;
+    padding: 25px;
     z-index: 10001;
-    width: 400px;
+    width: 450px;
     display: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
 }
 
 .custom-game-dialog.show {
     display: block;
+    animation: dialogFadeIn 0.3s ease-out;
+}
+
+@keyframes dialogFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 .dialog-header {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    color: var(--SmartThemeBodyTextColor);
 }
 
 .dialog-content {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .dialog-input {
     width: 100%;
-    padding: 8px;
+    padding: 12px;
     border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 5px;
+    border-radius: 8px;
     background: var(--SmartThemeBodyColor);
     color: var(--SmartThemeBodyTextColor);
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.dialog-input:focus {
+    border-color: var(--SmartThemeQuoteColor);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+    outline: none;
 }
 
 .dialog-buttons {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     justify-content: flex-end;
 }
 
 .dialog-btn {
-    padding: 8px 15px;
+    padding: 10px 20px;
     border: 1px solid var(--SmartThemeBorderColor);
     background: var(--SmartThemeBlurTintColor);
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .dialog-btn:hover {
     background: var(--SmartThemeBorderColor);
+    transform: translateY(-2px);
 }
 
 .dialog-btn.primary {
     background: var(--SmartThemeQuoteColor);
     color: white;
+    border-color: var(--SmartThemeQuoteColor);
+}
+
+.dialog-btn.primary:hover {
+    background: var(--SmartThemeBorderColor);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+    .game-toolbox-floating-button {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+    
+    .game-toolbox-panel {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+    
+    .custom-game-dialog {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .game-toolbox-floating-button {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .game-toolbox-panel {
+        width: 95vw;
+        max-height: 90vh;
+    }
+    
+    .game-toolbox-panel.minimized {
+        right: 20px;
+        bottom: 80px;
+        width: 200px;
+        height: 45px;
+    }
+    
+    .game-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 15px;
+    }
+    
+    .custom-game-dialog {
+        width: 90vw;
+        max-width: 400px;
+    }
 }
